@@ -159,40 +159,48 @@ class _TodoListScreenState extends State<TodoListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('To-Do List From Team: 4;')),
-      body: ListView.builder(
-        itemCount: _todoItems.length,
-        itemBuilder: (BuildContext context, int index) {
-          final todoItem = _todoItems[index];
-          return ListTile(
-            title: Text(todoItem['title']),
-            leading: Checkbox(
-              value: todoItem['is_done'] == 1,
-              onChanged: (bool? value) {
-                _toggleTodoItem(todoItem['id'], value ?? false);
-              },
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  color: Colors.blue,
-                  onPressed: () {
-                    _showEditDialog(todoItem['id'], todoItem['title']);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  color: Colors.redAccent,
-                  onPressed: () {
-                    _showDeleteConfirmationDialog(todoItem['id']);
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+      appBar: AppBar(title: const Text('To-Do List From Team: 4;')),
+      body: Container(
+        margin: const EdgeInsets.only(top: 25),
+        child: ListView.builder(
+          itemCount: _todoItems.length,
+          itemBuilder: (BuildContext context, int index) {
+            final todoItem = _todoItems[index];
+            return ListTile(
+              title: Text(todoItem['title'],
+              style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black87,
+                  decoration: todoItem['is_done']==1 ? TextDecoration.lineThrough : null),
+              ),
+              leading: Checkbox(
+                value: todoItem['is_done'] == 1,
+                onChanged: (bool? value) {
+                  _toggleTodoItem(todoItem['id'], value ?? false);
+                },
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    color: Colors.blue,
+                    onPressed: () {
+                      _showEditDialog(todoItem['id'], todoItem['title']);
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    color: Colors.redAccent,
+                    onPressed: () {
+                      _showDeleteConfirmationDialog(todoItem['id']);
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
