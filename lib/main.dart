@@ -2,20 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'To-Do App',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: TodoListScreen(),
+      home: const TodoListScreen(),
     );
   }
 }
 
 class TodoListScreen extends StatefulWidget {
+  const TodoListScreen({super.key});
+
   @override
   _TodoListScreenState createState() => _TodoListScreenState();
 }
@@ -102,7 +106,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
       builder: (BuildContext dialogContext) {
         String newTitle = currentTitle;
         return AlertDialog(
-          title: Text('Edit Todo'),
+          title: const Text('Edit Todo'),
           content: TextField(
             controller: TextEditingController(text: currentTitle),
             onChanged: (value) {
@@ -111,13 +115,13 @@ class _TodoListScreenState extends State<TodoListScreen> {
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: Text('Save'),
+              child: const Text('Save'),
               onPressed: () {
                 _updateTodoItem(id, newTitle);
                 Navigator.of(dialogContext).pop();
@@ -134,17 +138,17 @@ class _TodoListScreenState extends State<TodoListScreen> {
       context: this.context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Delete Todo'),
-          content: Text('Are you sure you want to delete this todo item?'),
+          title: const Text('Delete Todo'),
+          content: const Text('Are you sure you want to delete this todo item?'),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: Text('Delete'),
+              child: const Text('Delete'),
               onPressed: () {
                 _deleteTodoItem(id);
                 Navigator.of(dialogContext).pop();
@@ -183,14 +187,14 @@ class _TodoListScreenState extends State<TodoListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit),
+                    icon: const Icon(Icons.edit),
                     color: Colors.blue,
                     onPressed: () {
                       _showEditDialog(todoItem['id'], todoItem['title']);
                     },
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     color: Colors.redAccent,
                     onPressed: () {
                       _showDeleteConfirmationDialog(todoItem['id']);
@@ -203,14 +207,14 @@ class _TodoListScreenState extends State<TodoListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () {
           showDialog(
             context: context,
             builder: (BuildContext dialogContext) {
               String newTodoTitle = '';
               return AlertDialog(
-                title: Text('Add New Todo'),
+                title: const Text('Add New Todo'),
                 content: TextField(
                   onChanged: (value) {
                     newTodoTitle = value;
@@ -218,13 +222,13 @@ class _TodoListScreenState extends State<TodoListScreen> {
                 ),
                 actions: [
                   TextButton(
-                    child: Text('Cancel'),
+                    child: const Text('Cancel'),
                     onPressed: () {
                       Navigator.of(dialogContext).pop();
                     },
                   ),
                   TextButton(
-                    child: Text('Add'),
+                    child: const Text('Add'),
                     onPressed: () {
                       if (newTodoTitle.isNotEmpty) {
                         _addTodoItem(newTodoTitle);
