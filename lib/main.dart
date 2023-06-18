@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
     return MaterialApp(
       title: 'To-Do App',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const TodoListScreen(),
-      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.teal
+        ),
+        
+      home: TodoListScreen(),
     );
   }
 }
 
 class TodoListScreen extends StatefulWidget {
-  const TodoListScreen({super.key});
-
   @override
   _TodoListScreenState createState() => _TodoListScreenState();
 }
@@ -28,6 +28,10 @@ class TodoListScreen extends StatefulWidget {
 class _TodoListScreenState extends State<TodoListScreen> {
   late Database _database;
   List<Map<String, dynamic>> _todoItems = [];
+  List<Map<String, dynamic>> _filteredTodoItems = [];
+  final _todoController = TextEditingController();
+  TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -60,6 +64,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
     final List<Map<String, dynamic>> todoItems = await _database.query('todo_items');
     setState(() {
       _todoItems = todoItems;
+      _filterTodoItems();
     });
   }
 
@@ -101,13 +106,27 @@ class _TodoListScreenState extends State<TodoListScreen> {
     _loadTodoItems();
   }
 
+  void _filterTodoItems() {
+    if (_searchQuery.isEmpty) {
+      setState(() {
+        _filteredTodoItems = _todoItems.reversed.toList();
+      });
+    } else {
+      setState(() {
+        _filteredTodoItems = _todoItems
+            .where((item) => item['title'].toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
+      });
+    }
+  }
+
   void _showEditDialog(int id, String currentTitle) {
     showDialog(
       context: this.context,
       builder: (BuildContext dialogContext) {
         String newTitle = currentTitle;
         return AlertDialog(
-          title: const Text('Edit Todo'),
+          title: Text('Edit Todo'),
           content: TextField(
             controller: TextEditingController(text: currentTitle),
             onChanged: (value) {
@@ -116,13 +135,13 @@ class _TodoListScreenState extends State<TodoListScreen> {
           ),
           actions: [
             TextButton(
-              child: const Text('Cancel'),
+              child: Text('Cancel'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: const Text('Save'),
+              child: Text('Save'),
               onPressed: () {
                 _updateTodoItem(id, newTitle);
                 Navigator.of(dialogContext).pop();
@@ -139,17 +158,17 @@ class _TodoListScreenState extends State<TodoListScreen> {
       context: this.context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Delete Todo'),
-          content: const Text('Are you sure you want to delete this todo item?'),
+          title: Text('Delete Todo'),
+          content: Text('Are you sure you want to delete this todo item?'),
           actions: [
             TextButton(
-              child: const Text('Cancel'),
+              child: Text('Cancel'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: const Text('Delete'),
+              child: Text('Delete'),
               onPressed: () {
                 _deleteTodoItem(id);
                 Navigator.of(dialogContext).pop();
@@ -164,85 +183,147 @@ class _TodoListScreenState extends State<TodoListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('To-Do List From Team: 4;')),
-      body: Container(
-        margin: const EdgeInsets.only(top: 25),
-        child: ListView.builder(
-          itemCount: _todoItems.length,
-          itemBuilder: (BuildContext context, int index) {
-            final todoItem = _todoItems[index];
-            return ListTile(
-              title: Text(todoItem['title'],
-              style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.black87,
-                  decoration: todoItem['is_done']==1 ? TextDecoration.lineThrough : null),
+      appBar: AppBar(title: Text('To-Do List')),
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(8.0),
+            margin: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                  _filterTodoItems();
+                });
+              },
+              decoration: const InputDecoration(
+                labelText: 'Search',
+                prefixIcon: Icon(Icons.search),
+                border:OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(42))),
               ),
-              leading: Checkbox(
-                value: todoItem['is_done'] == 1,
-                onChanged: (bool? value) {
-                  _toggleTodoItem(todoItem['id'], value ?? false);
-                },
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    color: Colors.blue,
-                    onPressed: () {
-                      _showEditDialog(todoItem['id'], todoItem['title']);
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredTodoItems.length,
+              itemBuilder: (BuildContext context, int index) {
+                final todoItem = _filteredTodoItems[index];
+                return ListTile(
+                  title: Text(
+                      todoItem['title'],
+                      ),
+                  leading: Checkbox(
+                    value: todoItem['is_done'] == 1,
+                    onChanged: (bool? value) {
+                      _toggleTodoItem(todoItem['id'], value ?? false);
                     },
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    color: Colors.redAccent,
-                    onPressed: () {
-                      _showDeleteConfirmationDialog(todoItem['id']);
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Color(0xFF009588)),
+                        onPressed: () {
+                          _showEditDialog(todoItem['id'], todoItem['title']);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Color(0xffc41810)),
+                        onPressed: () {
+                          _showDeleteConfirmationDialog(todoItem['id']);
+                        },
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext dialogContext) {
-              String newTodoTitle = '';
-              return AlertDialog(
-                title: const Text('Add New Todo'),
-                content: TextField(
-                  onChanged: (value) {
-                    newTodoTitle = value;
-                  },
+                );
+              },
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(children: [
+              Expanded(child: Container(
+                margin: const EdgeInsets.only(bottom: 20, right: 20, left: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: const [BoxShadow(
+                    color: Colors.grey,
+                    offset: Offset(0.0,0.0),
+                    blurRadius: 10.0,
+                    spreadRadius: 0,
+
+                  ),],
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                actions: [
-                  TextButton(
-                    child: const Text('Cancel'),
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop();
-                    },
+                child: TextField(
+                  controller: _todoController,
+                  decoration: const InputDecoration(
+                    hintText: 'Add Your Todo',
+                    border: InputBorder.none,
                   ),
-                  TextButton(
-                    child: const Text('Add'),
-                    onPressed: () {
-                      if (newTodoTitle.isNotEmpty) {
-                        _addTodoItem(newTodoTitle);
-                        Navigator.of(dialogContext).pop();
-                      }
-                    },
+                ),
+
+              )),
+              Container(
+                margin: const EdgeInsets.only(bottom: 20, right: 20),
+                child: ElevatedButton(
+                  onPressed: () {
+                    _addTodoItem(_todoController.text);
+                    _todoController.text = "";
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF009588),
+                      minimumSize: const Size(60, 60),
+                      elevation: 10
                   ),
-                ],
-              );
-            },
-          );
-        },
+                  child: const Text("+", style: TextStyle(fontSize: 40),),
+                ),
+              )
+            ],
+            ),
+          )
+        ],
       ),
+
+      // floatingActionButton: FloatingActionButton(
+      //   child: Icon(Icons.add),
+      //   onPressed: () {
+      //     showDialog(
+      //       context: context,
+      //       builder: (BuildContext dialogContext) {
+      //         String newTodoTitle = '';
+      //         return AlertDialog(
+      //           title: Text('Add New Todo'),
+      //           content: TextField(
+      //             onChanged: (value) {
+      //               newTodoTitle = value;
+      //             },
+      //           ),
+      //           actions: [
+      //             TextButton(
+      //               child: Text('Cancel'),
+      //               onPressed: () {
+      //                 Navigator.of(dialogContext).pop();
+      //               },
+      //             ),
+      //             TextButton(
+      //               child: Text('Add'),
+      //               onPressed: () {
+      //                 if (newTodoTitle.isNotEmpty) {
+      //                   _addTodoItem(newTodoTitle);
+      //                   Navigator.of(dialogContext).pop();
+      //                 }
+      //               },
+      //             ),
+      //           ],
+      //         );
+      //       },
+      //     );
+      //   },
+      // ),
     );
   }
 }
